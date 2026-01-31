@@ -17,75 +17,73 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VR Trendz Pro - Label Sorter</title>
+    <title>VR TRENDZ | Shipment Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .gradient-bg { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
-        .logo-box { background: white; padding: 10px; border-radius: 50%; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gradient-text { background: linear-gradient(90deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn-grad { background: linear-gradient(90deg, #4f46e5, #7c3aed); transition: 0.3s; }
+        .btn-grad:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -10px rgba(124, 58, 237, 0.5); }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
-    <nav class="bg-white shadow-sm p-4 flex items-center justify-center gap-3">
-        <div class="logo-box">
-            <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="48" stroke="#4f46e5" stroke-width="4"/>
-                <path d="M30 35L50 70L70 35" stroke="#7c3aed" stroke-width="8" stroke-linecap="round"/>
-                <path d="M45 25L55 25" stroke="#4f46e5" stroke-width="4" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <h1 class="text-3xl font-black italic text-indigo-700 tracking-tighter">VR TRENDZ</h1>
-    </nav>
+<body class="min-h-screen flex flex-col items-center justify-center p-6">
+    <div class="max-w-4xl w-full">
+        <header class="text-center mb-12">
+            <div class="inline-block p-4 rounded-full bg-indigo-500/10 mb-4">
+                <svg width="60" height="60" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="45" stroke="url(#grad)" stroke-width="5"/>
+                    <path d="M35 40L50 65L65 40" stroke="white" stroke-width="8" stroke-linecap="round"/>
+                    <defs><linearGradient id="grad"><stop stop-color="#818cf8"/><stop offset="1" stop-color="#c084fc"/></linearGradient></defs>
+                </svg>
+            </div>
+            <h1 class="text-6xl font-black tracking-tighter mb-2 italic">VR <span class="gradient-text">TRENDZ</span></h1>
+            <p class="text-slate-400 text-lg uppercase tracking-widest">Shipment Logic Pro v2.0</p>
+        </header>
 
-    <div class="container mx-auto px-4 mt-10 max-w-xl">
-        <div class="bg-white rounded-3xl shadow-2xl p-8 border border-indigo-50">
-            <div id="dropZone" class="border-4 border-dashed border-indigo-100 rounded-2xl p-10 mb-6 text-center hover:border-indigo-300 transition-all cursor-pointer">
-                <p class="text-slate-400 font-medium">Drag & Drop Meesho PDF here</p>
+        <main class="glass rounded-[2rem] p-10 relative overflow-hidden">
+            <div id="dropZone" class="border-2 border-dashed border-slate-700 rounded-2xl p-16 text-center hover:border-indigo-500 transition-all cursor-pointer bg-white/5">
+                <p class="text-xl text-slate-300 mb-2">Click or Drag Meesho PDF</p>
+                <p class="text-sm text-slate-500">File will be sorted, cropped & sent to WhatsApp</p>
                 <input type="file" id="pdfInput" class="hidden" accept="application/pdf">
             </div>
-            
-            <button onclick="uploadFile()" id="btnProcess" class="w-full gradient-bg text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-[1.02] transition-transform">
-                START PROCESSING
+
+            <button onclick="uploadFile()" id="btn" class="w-full mt-8 btn-grad py-5 rounded-2xl text-xl font-bold shadow-2xl">
+                START AUTOMATION
             </button>
-            
-            <div id="status" class="mt-8"></div>
-        </div>
+
+            <div id="status" class="mt-8 space-y-4"></div>
+        </main>
     </div>
 
     <script>
-        const pdfInput = document.getElementById('pdfInput');
-        document.getElementById('dropZone').onclick = () => pdfInput.click();
+        const input = document.getElementById('pdfInput');
+        document.getElementById('dropZone').onclick = () => input.click();
 
         async function uploadFile() {
-            const file = pdfInput.files[0];
-            if (!file) return alert("Select PDF!");
-
-            const btn = document.getElementById('btnProcess');
+            if (!input.files[0]) return;
+            const btn = document.getElementById('btn');
             const status = document.getElementById('status');
+            
             btn.disabled = true;
-            status.innerHTML = '<div class="flex gap-2 justify-center"><div class="w-4 h-4 bg-indigo-600 rounded-full animate-bounce"></div><p>Sorting & Generating Summary...</p></div>';
+            btn.innerText = "PROCESSING PDF...";
+            status.innerHTML = '<div class="h-1 bg-slate-800 w-full rounded-full overflow-hidden"><div class="h-full bg-indigo-500 animate-[progress_2s_ease-in-out_infinite]" style="width:50%"></div></div>';
 
             const formData = new FormData();
-            formData.append('pdf', file);
+            formData.append('pdf', input.files[0]);
 
             try {
-                const response = await fetch('/process-pdf', { method: 'POST', body: formData });
-                const result = await response.json();
-                if(response.ok) {
-                    let summaryHtml = '<div class="bg-green-50 p-4 rounded-xl mt-4"><h3 class="font-bold text-green-800 border-b border-green-200 pb-2 mb-2">Order Summary Sent!</h3>';
-                    summaryHtml += '<table class="w-full text-sm text-left">';
-                    summaryHtml += '<tr><th class="py-1">SKU</th><th>Qty</th></tr>';
-                    for (const [sku, qty] of Object.entries(result.summary.skus)) {
-                        summaryHtml += `<tr><td class="py-1">${sku}</td><td>${qty}</td></tr>`;
-                    }
-                    summaryHtml += '</table></div>';
-                    status.innerHTML = summaryHtml;
-                } else {
-                    throw new Error(result.message);
-                }
+                const res = await fetch('/process-pdf', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (res.ok) {
+                    status.innerHTML = '<div class="p-4 bg-emerald-500/20 text-emerald-400 rounded-xl border border-emerald-500/30 text-center font-bold">✓ DONE! PDF & SUMMARY SENT TO WHATSAPP</div>';
+                } else { throw new Error(data.message); }
             } catch (err) {
-                status.innerHTML = `<p class="text-red-500 font-bold">Error: ${err.message}</p>`;
+                status.innerHTML = `<div class="p-4 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30">Error: ${err.message}</div>`;
             } finally {
                 btn.disabled = false;
+                btn.innerText = "START AUTOMATION";
             }
         }
     </script>
@@ -95,20 +93,23 @@ HTML_TEMPLATE = """
 
 def extract_label_data(page):
     text = page.get_text()
-    # Courier Identify
+    
+    # 1. QR Code Check (Delete page if no QR)
+    # Meesho labels always have barcodes/QR. If no digits or barcodes found, skip.
+    if not re.search(r'\d{10,}', text) and len(page.get_images()) == 0:
+        return None
+
     courier = "Other"
     if "Delhivery" in text: courier = "Delhivery"
     elif "Valmo" in text: courier = "Valmo"
     elif "Ecom" in text: courier = "Ecom Express"
     
-    # Account Wise only for Delhivery
     account_name = "N/A"
-    if courier == "Delhivery" and "If undelivered, return to:" in text:
+    if courier == "Delhivery":
         match = re.search(r"If undelivered, return to:\s*\n(.*?)\n", text)
         if match: account_name = match.group(1).strip()
 
-    # SKU & Qty (Product Details block)
-    sku = "Unknown SKU"
+    sku = "Unknown"
     sku_match = re.search(r"SKU\s*\n(.*?)\n", text)
     if sku_match: sku = sku_match.group(1).strip()
 
@@ -116,7 +117,7 @@ def extract_label_data(page):
     qty_match = re.search(r"Qty\s*\n(\d+)", text)
     if qty_match: qty = int(qty_match.group(1))
 
-    return {"page_index": page.number, "courier": courier, "account": account_name, "sku": sku, "qty": qty}
+    return {"page_index": page.number, "courier": courier, "account": account_name, "sku": sku, "qty": qty, "text": text}
 
 @app.route('/')
 def index():
@@ -127,10 +128,14 @@ def process_pdf():
     try:
         file = request.files['pdf']
         doc = fitz.open(stream=file.read(), filetype="pdf")
-        all_labels = [extract_label_data(page) for page in doc]
+        valid_labels = []
 
-        # Sorting Logic
-        sorted_labels = sorted(all_labels, key=lambda x: (
+        for page in doc:
+            data = extract_label_data(page)
+            if data: valid_labels.append(data)
+
+        # Sorting: Courier -> Account -> SKU -> Qty
+        sorted_labels = sorted(valid_labels, key=lambda x: (
             x['courier'].lower(),
             x['account'].lower(),
             x['sku'].lower(),
@@ -138,48 +143,65 @@ def process_pdf():
         ))
 
         output_doc = fitz.open()
-        sku_summary = {}
-        account_summary = {}
+        sku_stats = {}
 
         for label in sorted_labels:
-            # Full Page Crop (Dusri image jesa pura label dikhane ke liye)
-            output_doc.insert_pdf(doc, from_page=label['page_index'], to_page=label['page_index'])
+            page = doc[label['page_index']]
             
-            # Update Summary Counters
-            sku_summary[label['sku']] = sku_summary.get(label['sku'], 0) + label['qty']
-            if label['account'] != "N/A":
-                account_summary[label['account']] = account_summary.get(label['account'], 0) + 1
+            # --- DYNAMIC CROP LOGIC ---
+            # Search for "as applicable" position to crop exactly there
+            text_instances = page.search_for("as applicable")
+            if text_instances:
+                # Invoice end point mil gaya
+                bottom_y = text_instances[0].y1 + 10 
+            else:
+                # Default agar text nahi mila (Standard Meesho height)
+                bottom_y = 750 
 
-        # Summary Text for WhatsApp
-        summary_msg = "*📦 VR TRENDZ - ORDER SUMMARY*\n\n"
-        summary_msg += "*SKU Wise Breakdown:*\n"
-        for sku, count in sku_summary.items():
-            summary_msg += f"- {sku}: {count}\n"
+            # Create new page with exact cropped height (A4 width = 595)
+            rect = fitz.Rect(0, 0, 595, bottom_y)
+            new_page = output_doc.new_page(width=595, height=bottom_y)
+            new_page.show_pdf_page(new_page.rect, doc, label['page_index'], clip=rect)
+
+            # Stats for Summary
+            key = f"{label['sku']}"
+            sku_stats[key] = sku_stats.get(key, 0) + label['qty']
+
+        # --- INSERT SUMMARY PAGE AT THE END ---
+        summary_page = output_doc.new_page(width=595, height=842)
+        summary_page.insert_text((200, 50), "COURIER WISE SUMMARY", fontsize=16, color=(0, 0, 0))
         
-        if account_summary:
-            summary_msg += "\n*Account Wise (Delhivery):*\n"
-            for acc, count in account_summary.items():
-                summary_msg += f"- {acc}: {count} orders\n"
+        y_pos = 100
+        summary_page.insert_text((50, y_pos), "No | SKU Name | Total Qty", fontsize=12)
+        y_pos += 20
+        summary_page.draw_line((50, y_pos), (550, y_pos))
+        
+        for i, (sku, total) in enumerate(sku_stats.items(), 1):
+            y_pos += 25
+            summary_page.insert_text((50, y_pos), f"{i}  | {sku[:40]} | {total}")
+            if y_pos > 800: # New page if summary is long
+                summary_page = output_doc.new_page(width=595, height=842)
+                y_pos = 50
 
-        output_path = "/tmp/final_labels.pdf"
+        output_path = "/tmp/vr_trendz_final.pdf"
         output_doc.save(output_path)
         
-        # WhatsApp sending
-        send_to_whatsapp(output_path, summary_msg)
+        # WhatsApp Logic
+        summary_text = "*VR TRENDZ SUMMARY*\nTotal SKUs: " + str(len(sku_stats))
+        send_to_whatsapp(output_path, summary_text)
         
-        return jsonify({"status": "Success", "summary": {"skus": sku_summary, "accounts": account_summary}})
+        return jsonify({"status": "Success"})
     except Exception as e:
         return jsonify({"status": "Error", "message": str(e)}), 500
 
 def send_to_whatsapp(file_path, text_msg):
-    # 1. Send File
-    file_url = f"https://api.green-api.com/waInstance{ID_INSTANCE}/sendFileByUpload/{API_TOKEN_INSTANCE}"
+    # Send PDF
+    url_file = f"https://api.green-api.com/waInstance{ID_INSTANCE}/sendFileByUpload/{API_TOKEN_INSTANCE}"
     with open(file_path, 'rb') as f:
-        requests.post(file_url, data={'chatId': CHAT_ID}, files=[('file', (os.path.basename(file_path), f, 'application/pdf'))])
-    
-    # 2. Send Summary Message
-    msg_url = f"https://api.green-api.com/waInstance{ID_INSTANCE}/sendMessage/{API_TOKEN_INSTANCE}"
-    requests.post(msg_url, json={'chatId': CHAT_ID, 'message': text_msg})
+        requests.post(url_file, data={'chatId': CHAT_ID}, files=[('file', (os.path.basename(file_path), f, 'application/pdf'))])
+    # Send Msg
+    url_msg = f"https://api.green-api.com/waInstance{ID_INSTANCE}/sendMessage/{API_TOKEN_INSTANCE}"
+    requests.post(url_msg, json={'chatId': CHAT_ID, 'message': text_msg})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
