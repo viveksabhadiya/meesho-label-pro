@@ -89,6 +89,10 @@ HTML_TEMPLATE = """
 </html>
 """
 
+@app.route('/')
+def index():
+    return render_template_string(HTML_TEMPLATE)
+    
 def extract_label_data(page):
     text = page.get_text()
     if not re.search(r'\d{10,}', text): return None
