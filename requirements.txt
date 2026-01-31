@@ -1,4 +1,4 @@
 flask
-pymupdf==1.23.26
+pymupdf
 requests
 gunicorn
