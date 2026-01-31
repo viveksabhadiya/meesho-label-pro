@@ -7,9 +7,9 @@ from flask import Flask, request, jsonify, render_template_string
 app = Flask(__name__)
 
 # --- CONFIGURATION ---
-ID_INSTANCE = "7103498692"
-API_TOKEN_INSTANCE = "217a71fbbecb41658e5fffa00451817bbe62ea618ad1461c8d"
-CHAT_ID = "919428146028-1606295944@g.us"
+ID_INSTANCE = os.environ.get("ID_INSTANCE", "7103498692")
+API_TOKEN_INSTANCE = os.environ.get("API_TOKEN_INSTANCE", "217a71fbbecb41658e5fffa00451817bbe62ea618ad1461c8d")
+CHAT_ID = os.environ.get("CHAT_ID", "919428146028-1606295944@g.us")
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
