@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-# --- CONFIGURATION (Render Environment Variables me set karein) ---
+# --- CONFIGURATION ---
 ID_INSTANCE = os.environ.get("ID_INSTANCE", "7103498692")
 API_TOKEN_INSTANCE = os.environ.get("API_TOKEN_INSTANCE", "217a71fbbecb41658e5fffa00451817bbe62ea618ad1461c8d")
 CHAT_ID = os.environ.get("CHAT_ID", "919428146028-1606295944@g.us")
@@ -17,43 +17,32 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VR TRENDZ | Shipment Master Pro</title>
+    <title>VR TRENDZ | SHIPMENT MASTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: radial-gradient(circle at center, #1e1b4b, #0f172a); color: white; min-height: 100vh; font-family: 'Inter', sans-serif; }
-        .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2.5rem; }
-        .btn-glow { background: linear-gradient(135deg, #6366f1, #a855f7); transition: all 0.4s ease; box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
-        .btn-glow:hover { transform: scale(1.02); box-shadow: 0 0 35px rgba(168, 85, 247, 0.6); }
-        .loader { width: 48px; height: 48px; border: 5px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { background: #0f172a; color: white; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; width: 100%; max-width: 600px; padding: 3rem; }
+        .btn-grad { background: linear-gradient(135deg, #6366f1, #a855f7); transition: 0.3s; }
+        .btn-grad:hover { transform: scale(1.02); box-shadow: 0 0 25px rgba(168, 85, 247, 0.5); }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-4">
-    <div class="w-full max-w-3xl">
+<body>
+    <div class="glass shadow-2xl">
         <div class="text-center mb-10">
-            <div class="inline-block p-5 bg-white/10 rounded-full mb-6">
-                <svg width="50" height="50" viewBox="0 0 100 100" fill="none">
-                    <path d="M20 30L50 80L80 30" stroke="#a855f7" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-                    <circle cx="50" cy="20" r="10" fill="#6366f1"/>
-                </svg>
-            </div>
-            <h1 class="text-6xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">VR TRENDZ</h1>
-            <p class="text-indigo-200/50 uppercase tracking-[0.3em] text-sm mt-2">Logistics Intelligence System</p>
+            <h1 class="text-5xl font-black italic tracking-tighter text-indigo-400">VR <span class="text-white">TRENDZ</span></h1>
+            <p class="text-slate-400 text-xs tracking-widest mt-2 uppercase">Automation v3.0</p>
         </div>
 
-        <div class="glass-card p-10 shadow-2xl">
-            <div id="dropZone" class="border-2 border-dashed border-indigo-500/30 rounded-3xl p-16 text-center cursor-pointer hover:bg-white/5 transition-all">
-                <p class="text-xl text-indigo-100/80 mb-2">Drop your Meesho PDF here</p>
-                <p class="text-xs text-indigo-300/40 italic">Sorted by Courier > Account > SKU > Qty</p>
-                <input type="file" id="pdfInput" class="hidden" accept="application/pdf">
-            </div>
-
-            <button onclick="uploadFile()" id="processBtn" class="w-full mt-8 btn-glow py-6 rounded-3xl text-xl font-black uppercase tracking-widest italic">
-                Start Automation
-            </button>
-
-            <div id="status" class="mt-10 text-center"></div>
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 rounded-3xl p-12 text-center cursor-pointer hover:border-indigo-500 hover:bg-white/5 transition-all mb-6">
+            <p class="text-slate-300">Click or Drag Meesho PDF</p>
+            <input type="file" id="pdfInput" class="hidden" accept="application/pdf">
         </div>
+
+        <button onclick="uploadFile()" id="btn" class="w-full btn-grad py-5 rounded-2xl text-xl font-bold italic tracking-wider">
+            START PROCESSING
+        </button>
+
+        <div id="status" class="mt-8"></div>
     </div>
 
     <script>
@@ -61,27 +50,30 @@ HTML_TEMPLATE = """
         document.getElementById('dropZone').onclick = () => input.click();
 
         async function uploadFile() {
-            if (!input.files[0]) return;
-            const btn = document.getElementById('processBtn');
+            if (!input.files[0]) return alert("Please select a file!");
+            const btn = document.getElementById('btn');
             const status = document.getElementById('status');
             
             btn.disabled = true;
-            btn.innerHTML = '<span class="loader"></span>';
-            status.innerHTML = '<p class="text-indigo-300 animate-pulse font-bold">Generating Professional Summary Page...</p>';
+            btn.innerText = "PROCESSING...";
+            status.innerHTML = '<div class="flex justify-center"><div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-500"></div></div>';
 
             const formData = new FormData();
             formData.append('pdf', input.files[0]);
 
             try {
                 const res = await fetch('/process-pdf', { method: 'POST', body: formData });
+                const data = await res.json();
                 if (res.ok) {
-                    status.innerHTML = '<div class="p-6 bg-green-500/20 text-green-400 rounded-3xl border border-green-500/30 font-black">✓ SHIPMENT PROCESSED & SENT TO WHATSAPP</div>';
-                } else { throw new Error("Processing Failed"); }
+                    status.innerHTML = '<div class="p-4 bg-green-500/20 text-green-400 rounded-xl border border-green-500/30 text-center font-bold uppercase">✓ Processed & Sent to WhatsApp</div>';
+                } else {
+                    throw new Error(data.message || "Internal Server Error");
+                }
             } catch (err) {
-                status.innerHTML = `<div class="p-6 bg-red-500/20 text-red-400 rounded-3xl border border-red-500/30 font-bold">Error: ${err.message}</div>`;
+                status.innerHTML = `<div class="p-4 bg-red-500/20 text-red-400 rounded-xl border border-red-500/30 font-bold">Error: ${err.message}</div>`;
             } finally {
                 btn.disabled = false;
-                btn.innerText = "Start Automation";
+                btn.innerText = "START PROCESSING";
             }
         }
     </script>
@@ -89,130 +81,138 @@ HTML_TEMPLATE = """
 </html>
 """
 
-@app.route('/')
-def index():
-    return render_template_string(HTML_TEMPLATE)
-    
-def extract_label_data(page):
+def extract_data(page):
     text = page.get_text()
-    if not re.search(r'\d{10,}', text): return None
+    if not re.search(r'\d{10,}', text): return None # QR Code check
 
-    # Courier Detection
     courier = "Other"
     if "Delhivery" in text: courier = "Delhivery"
     elif "Valmo" in text: courier = "Valmo"
     elif "Shadowfax" in text: courier = "Shadowfax"
-    elif "Ecom" in text: courier = "Ecom Express"
 
-    # Account Name
-    account_name = "N/A"
-    acc_match = re.search(r"If undelivered, return to:\s*\n(.*?)\n", text)
-    if acc_match: account_name = acc_match.group(1).strip()
+    acc = "N/A"
+    acc_m = re.search(r"If undelivered, return to:\s*\n(.*?)\n", text)
+    if acc_m: acc = acc_m.group(1).strip()
 
-    # SKU & Size Logic
     sku = "N/A"
-    sku_match = re.search(r"SKU\s*\n(.*?)\n", text)
-    if sku_match: sku = sku_match.group(1).strip()
+    sku_m = re.search(r"SKU\s*\n(.*?)\n", text)
+    if sku_m: sku = sku_m.group(1).strip()
 
     size = "N/A"
-    size_match = re.search(r"Size\s*\n(.*?)\s*\n", text)
-    if size_match: size = size_match.group(1).strip()
+    size_m = re.search(r"Size\s*\n(.*?)\s*\n", text)
+    if size_m: size = size_m.group(1).strip()
+
+    color = "N/A"
+    color_m = re.search(r"Color\s*\n(.*?)\s*\n", text)
+    if color_m: color = color_m.group(1).strip()
 
     qty = 1
-    qty_match = re.search(r"Qty\s*\n(\d+)", text)
-    if qty_match: qty = int(qty_match.group(1))
+    qty_m = re.search(r"Qty\s*\n(\d+)", text)
+    if qty_m: qty = int(qty_m.group(1))
 
-    return {"page_index": page.number, "courier": courier, "account": account_name, "sku": sku, "size": size, "qty": qty}
+    return {"p": page.number, "c": courier, "a": acc, "s": sku, "sz": size, "cl": color, "q": qty}
 
-def draw_table_header(page, y, title, columns):
-    page.insert_text((230, y-10), title, fontsize=12, fontname="helv-bold")
-    x_offsets = [50, 80, 400, 500]
-    for i, col in enumerate(columns):
-        page.insert_text((x_offsets[i], y+15), col, fontsize=10, fontname="helv-bold")
-    page.draw_rect(fitz.Rect(50, y, 550, y+25), color=(0,0,0), width=1)
-    return y + 25
+@app.route('/')
+def index():
+    return render_template_string(HTML_TEMPLATE)
 
 @app.route('/process-pdf', methods=['POST'])
 def process_pdf():
     try:
         file = request.files['pdf']
         doc = fitz.open(stream=file.read(), filetype="pdf")
-        valid_labels = []
+        valid = []
         for page in doc:
-            data = extract_label_data(page)
-            if data: valid_labels.append(data)
+            d = extract_data(page)
+            if d: valid.append(d)
 
-        # 1. Courier Sorting First
-        sorted_labels = sorted(valid_labels, key=lambda x: (x['courier'].lower(), x['account'].lower(), x['sku'].lower(), x['qty']))
+        # Sorting: Courier > Account > SKU > Qty
+        valid.sort(key=lambda x: (x['c'].lower(), x['a'].lower(), x['s'].lower(), x['q']))
 
-        output_doc = fitz.open()
-        sku_summary = {} # Key: (SKU, Size)
-        courier_summary = {}
-        account_summary = {}
+        out = fitz.open()
+        sku_sum, cp_sum, acc_sum = {}, {}, {}
 
-        for label in sorted_labels:
-            # Dynamic Crop to "as applicable"
-            page = doc[label['page_index']]
-            text_instances = page.search_for("as applicable")
-            bottom_y = text_instances[0].y1 + 10 if text_instances else 750
-            
-            rect = fitz.Rect(0, 0, 595, bottom_y)
-            new_page = output_doc.new_page(width=595, height=bottom_y)
-            new_page.show_pdf_page(new_page.rect, doc, label['page_index'], clip=rect)
+        for l in valid:
+            page = doc[l['p']]
+            # Crop to "as applicable"
+            hits = page.search_for("as applicable")
+            bottom = hits[0].y1 + 10 if hits else 750
+            rect = fitz.Rect(0, 0, 595, bottom)
+            np = out.new_page(width=595, height=bottom)
+            np.show_pdf_page(np.rect, doc, l['p'], clip=rect)
 
-            # Data Aggregation
-            key = (label['sku'], label['size'])
-            sku_summary[key] = sku_summary.get(key, 0) + label['qty']
-            courier_summary[label['courier']] = courier_summary.get(label['courier'], 0) + 1
-            account_summary[label['account']] = account_summary.get(label['account'], 0) + 1
+            # Aggregate
+            k = (l['s'], l['sz'], l['cl'])
+            sku_sum[k] = sku_sum.get(k, 0) + l['q']
+            cp_sum[l['c']] = cp_sum.get(l['c'], 0) + 1
+            acc_sum[l['a']] = acc_sum.get(l['a'], 0) + 1
 
-        # --- GENERATE SUMMARY PAGE (Exactly like screenshots) ---
-        sum_page = output_doc.new_page(width=595, height=842)
+        # --- SUMMARY PAGE ---
+        sp = out.new_page(width=595, height=842)
         y = 50
-
-        # Table 1: Order Summary
-        y = draw_table_header(sum_page, y, "Order Summary", ["No", "SKU", "Size", "QTY"])
-        for i, ((sku, size), qty) in enumerate(sku_summary.items(), 1):
-            sum_page.insert_text((55, y+15), str(i), fontsize=9)
-            sum_page.insert_text((85, y+15), sku[:55], fontsize=9)
-            sum_page.insert_text((405, y+15), size, fontsize=9)
-            sum_page.insert_text((505, y+15), str(qty), fontsize=9)
-            sum_page.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=0.5)
+        
+        # 1. Order Summary Table
+        sp.insert_text((230, y), "Order Summary", fontname="helv-bold", fontsize=14)
+        y += 20
+        # Headers
+        sp.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=1)
+        for i, h in enumerate(["No", "SKU", "Size", "Color", "QTY"]):
+            sp.insert_text((55 + [0, 30, 300, 400, 460][i], y+15), h, fontname="helv-bold", fontsize=10)
+        y += 20
+        # Rows
+        for i, ((sku, sz, cl), q) in enumerate(sku_sum.items(), 1):
+            sp.insert_text((55, y+15), str(i), fontsize=9)
+            sp.insert_text((85, y+15), sku[:50], fontsize=8)
+            sp.insert_text((355, y+15), sz, fontsize=9)
+            sp.insert_text((455, y+15), cl, fontsize=9)
+            sp.insert_text((515, y+15), str(q), fontsize=9)
+            sp.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=0.5)
             y += 20
-        sum_page.insert_text((405, y+15), "Total", fontname="helv-bold")
-        sum_page.insert_text((505, y+15), str(sum(sku_summary.values())), fontname="helv-bold")
-        y += 40
+        sp.insert_text((455, y+15), "Total", fontname="helv-bold")
+        sp.insert_text((515, y+15), str(sum(sku_sum.values())), fontname="helv-bold")
+        y += 50
 
-        # Table 2: Courier Wise Summary
-        y = draw_table_header(sum_page, y, "Courier Wise Summary", ["No", "Total Order", "Courier Partner", ""])
-        for i, (cp, count) in enumerate(courier_summary.items(), 1):
-            sum_page.insert_text((55, y+15), str(i), fontsize=9)
-            sum_page.insert_text((85, y+15), str(count), fontsize=9)
-            sum_page.insert_text((405, y+15), cp, fontsize=9)
-            sum_page.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=0.5)
+        # 2. Courier Summary Table
+        sp.insert_text((210, y), "Courier Wise Summary", fontname="helv-bold", fontsize=14)
+        y += 20
+        sp.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=1)
+        for i, h in enumerate(["No", "Total Order", "Courier Partner"]):
+            sp.insert_text((55 + [0, 30, 150][i], y+15), h, fontname="helv-bold", fontsize=10)
+        y += 20
+        for i, (cp, c) in enumerate(cp_sum.items(), 1):
+            sp.insert_text((55, y+15), str(i), fontsize=9)
+            sp.insert_text((85, y+15), str(c), fontsize=9)
+            sp.insert_text((205, y+15), cp, fontsize=9)
+            sp.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=0.5)
             y += 20
-        y += 40
+        y += 50
 
-        # Table 3: Company Wise Total Order
-        y = draw_table_header(sum_page, y, "Company Wise Total Order", ["No", "Total Order", "Sold By", ""])
-        for i, (acc, count) in enumerate(account_summary.items(), 1):
-            sum_page.insert_text((55, y+15), str(i), fontsize=9)
-            sum_page.insert_text((85, y+15), str(count), fontsize=9)
-            sum_page.insert_text((405, y+15), acc[:50], fontsize=9)
-            sum_page.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=0.5)
+        # 3. Company Summary Table
+        sp.insert_text((210, y), "Company Wise Total Order", fontname="helv-bold", fontsize=14)
+        y += 20
+        sp.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=1)
+        for i, h in enumerate(["No", "Total Order", "Sold By"]):
+            sp.insert_text((55 + [0, 30, 150][i], y+15), h, fontname="helv-bold", fontsize=10)
+        y += 20
+        for i, (acc, c) in enumerate(acc_sum.items(), 1):
+            sp.insert_text((55, y+15), str(i), fontsize=9)
+            sp.insert_text((85, y+15), str(c), fontsize=9)
+            sp.insert_text((205, y+15), acc[:60], fontsize=8)
+            sp.draw_rect(fitz.Rect(50, y, 550, y+20), color=(0,0,0), width=0.5)
             y += 20
 
-        output_path = "/tmp/vr_trendz_final.pdf"
-        output_doc.save(output_path)
-        send_to_whatsapp(output_path, "*VR TRENDZ SHIPMENT COMPLETED*")
+        path = "/tmp/final.pdf"
+        out.save(path)
+        send(path)
         return jsonify({"status": "Success"})
     except Exception as e:
+        print(f"DEBUG: {str(e)}")
         return jsonify({"status": "Error", "message": str(e)}), 500
 
-def send_to_whatsapp(file_path, msg):
+def send(p):
     url = f"https://api.green-api.com/waInstance{ID_INSTANCE}/sendFileByUpload/{API_TOKEN_INSTANCE}"
-    with open(file_path, 'rb') as f:
-        requests.post(url, data={'chatId': CHAT_ID, 'caption': msg}, files=[('file', (os.path.basename(file_path), f, 'application/pdf'))])
+    with open(p, 'rb') as f:
+        requests.post(url, data={'chatId': CHAT_ID, 'caption': '*VR TRENDZ SHIPMENT DONE*'}, files=[('file', (os.path.basename(p), f, 'application/pdf'))])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
